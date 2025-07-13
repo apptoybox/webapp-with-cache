@@ -45,6 +45,8 @@ setup:
 	else \
 		echo "✅ .env file already exists"; \
 	fi
+	pip install --upgrade pip
+	pip install --upgrade --requirement development-requirements.txt
 
 # Build Docker images
 build: setup
@@ -72,14 +74,11 @@ restart: down up
 # Clean up (stop services and remove volumes)
 clean:
 	@echo "🧹 Cleaning up..."
-	docker-compose down -v
-	docker system prune -f
-	@echo "✅ Cleanup completed"
 
 # View logs
 logs:
 	@echo "📋 Viewing application logs..."
-	docker-compose logs -f app
+	-docker-compose logs -f app
 
 # Check service status
 status:
@@ -92,6 +91,13 @@ status:
 # Health check for all services
 health:
 	@echo "🏥 Performing health checks..."
+	@echo ""
+	@echo "🔍 Checking application health endpoint..."
+	@if curl -s http://localhost:8000/health > /dev/null; then \
+		echo "✅ Application health endpoint is responding"; \
+	else \
+		echo "❌ Application health endpoint is not responding"; \
+	fi
 	@echo ""
 	@echo "🔍 Checking application..."
 	@if curl -s http://localhost:8000/ > /dev/null; then \
@@ -124,6 +130,17 @@ test:
 	@echo "Waiting for application to be ready..."
 	@sleep 5
 	@python test_cache.py
+
+# Test the 500 error fix
+test-fix:
+	@echo "🔧 Testing the 500 error fix..."
+	@if [ ! -f .env ]; then \
+		echo "❌ .env file not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+	@echo "Waiting for application to be ready..."
+	@sleep 5
+	@python test_fix.py
 
 # Seed database with sample data
 seed:

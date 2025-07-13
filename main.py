@@ -9,7 +9,11 @@ import json
 
 from database import get_db, engine
 from models import Base, Product
-from schemas import ProductCreate, ProductResponse, CacheStats
+from schemas import (
+    ProductCreate, ProductResponse, CacheStats,
+    ProductResponseWithMetadata, ProductsResponseWithMetadata,
+    DeleteResponse, PerformanceResponse
+)
 from cache_service import CacheService
 from database_service import DatabaseService
 
@@ -43,7 +47,19 @@ async def root():
     """Serve the frontend application"""
     return FileResponse("static/index.html")
 
-@app.get("/products", response_model=List[ProductResponse])
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "services": {
+            "database": "connected",
+            "cache": "connected"
+        }
+    }
+
+@app.get("/products", response_model=ProductsResponseWithMetadata)
 async def get_products(db: Session = Depends(get_db)):
     """Get all products with caching"""
     start_time = time.time()
@@ -71,7 +87,7 @@ async def get_products(db: Session = Depends(get_db)):
         "response_time": time.time() - start_time
     }
 
-@app.get("/products/{product_id}", response_model=ProductResponse)
+@app.get("/products/{product_id}", response_model=ProductResponseWithMetadata)
 async def get_product(product_id: int, db: Session = Depends(get_db)):
     """Get product by ID with caching"""
     start_time = time.time()
@@ -102,7 +118,7 @@ async def get_product(product_id: int, db: Session = Depends(get_db)):
         "response_time": time.time() - start_time
     }
 
-@app.post("/products", response_model=ProductResponse)
+@app.post("/products", response_model=ProductResponseWithMetadata)
 async def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     """Create a new product and invalidate cache"""
     start_time = time.time()
@@ -119,7 +135,7 @@ async def create_product(product: ProductCreate, db: Session = Depends(get_db)):
         "response_time": time.time() - start_time
     }
 
-@app.put("/products/{product_id}", response_model=ProductResponse)
+@app.put("/products/{product_id}", response_model=ProductResponseWithMetadata)
 async def update_product(product_id: int, product: ProductCreate, db: Session = Depends(get_db)):
     """Update a product and invalidate cache"""
     start_time = time.time()
@@ -139,7 +155,7 @@ async def update_product(product_id: int, product: ProductCreate, db: Session = 
         "response_time": time.time() - start_time
     }
 
-@app.delete("/products/{product_id}")
+@app.delete("/products/{product_id}", response_model=DeleteResponse)
 async def delete_product(product_id: int, db: Session = Depends(get_db)):
     """Delete a product and invalidate cache"""
     start_time = time.time()
@@ -170,7 +186,7 @@ async def clear_cache():
     cache_service.clear_all()
     return {"message": "Cache cleared successfully"}
 
-@app.get("/cache/performance")
+@app.get("/cache/performance", response_model=PerformanceResponse)
 async def compare_performance(db: Session = Depends(get_db)):
     """Compare cached vs non-cached performance"""
     # Test with cached request

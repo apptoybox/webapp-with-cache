@@ -25,8 +25,29 @@ class ProductResponse(ProductBase):
     class Config:
         from_attributes = True
 
+# New schemas for caching demonstration with metadata
+class ProductResponseWithMetadata(BaseModel):
+    product: ProductResponse
+    source: str
+    response_time: float
+
+class ProductsResponseWithMetadata(BaseModel):
+    products: List[ProductResponse]
+    source: str
+    response_time: float
+
+class DeleteResponse(BaseModel):
+    message: str
+    source: str
+    response_time: float
+
 class CacheStats(BaseModel):
     hits: int
     misses: int
     hit_rate: float
     total_requests: int
+
+class PerformanceResponse(BaseModel):
+    cached_response_time: float
+    database_response_time: float
+    performance_improvement: str
