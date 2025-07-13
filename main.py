@@ -123,6 +123,9 @@ async def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     """Create a new product and invalidate cache"""
     start_time = time.time()
 
+    # Log the incoming request for debugging
+    print(f"Creating product: {product.dict()}")
+
     # Create product in database
     new_product = db_service.create_product(db, product)
 
@@ -203,6 +206,33 @@ async def compare_performance(db: Session = Depends(get_db)):
         "cached_response_time": cache_time,
         "database_response_time": db_time,
         "performance_improvement": f"{((db_time - cache_time) / db_time * 100):.2f}%"
+    }
+
+@app.post("/debug/products", response_model=ProductResponseWithMetadata)
+async def debug_create_product(request: dict, db: Session = Depends(get_db)):
+    """Debug endpoint to log the exact request data"""
+    print(f"🔍 Debug: Received request data: {request}")
+
+    # Try to parse as ProductCreate
+    try:
+        product = ProductCreate(**request)
+        print(f"✅ Debug: Successfully parsed as ProductCreate: {product.dict()}")
+    except Exception as e:
+        print(f"❌ Debug: Failed to parse as ProductCreate: {e}")
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
+
+    start_time = time.time()
+
+    # Create product in database
+    new_product = db_service.create_product(db, product)
+
+    # Invalidate cache
+    cache_service.delete("all_products")
+
+    return {
+        "product": new_product,
+        "source": "database",
+        "response_time": time.time() - start_time
     }
 
 if __name__ == "__main__":

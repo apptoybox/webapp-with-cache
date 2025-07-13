@@ -21,6 +21,8 @@ help:
 	@echo ""
 	@echo "🧪 Testing & Development:"
 	@echo "  make test      - Run cache functionality tests"
+	@echo "  make test-fix  - Test the 500 error fix"
+	@echo "  make test-validation - Test form validation"
 	@echo "  make seed      - Seed database with sample data"
 	@echo "  make lint      - Lint Python code"
 	@echo "  make format    - Format Python code"
@@ -45,8 +47,6 @@ setup:
 	else \
 		echo "✅ .env file already exists"; \
 	fi
-	pip install --upgrade pip
-	pip install --upgrade --requirement development-requirements.txt
 
 # Build Docker images
 build: setup
@@ -74,11 +74,14 @@ restart: down up
 # Clean up (stop services and remove volumes)
 clean:
 	@echo "🧹 Cleaning up..."
+	docker-compose down -v
+	docker system prune -f
+	@echo "✅ Cleanup completed"
 
 # View logs
 logs:
 	@echo "📋 Viewing application logs..."
-	-docker-compose logs -f app
+	docker-compose logs -f app
 
 # Check service status
 status:
@@ -141,6 +144,17 @@ test-fix:
 	@echo "Waiting for application to be ready..."
 	@sleep 5
 	@python test_fix.py
+
+# Test form validation
+test-validation:
+	@echo "🧪 Testing form validation..."
+	@if [ ! -f .env ]; then \
+		echo "❌ .env file not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+	@echo "Waiting for application to be ready..."
+	@sleep 5
+	@python test_form_validation.py
 
 # Seed database with sample data
 seed:
