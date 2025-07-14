@@ -41,7 +41,7 @@ Get the cache example application running in minutes!
 Run the test script to verify everything works:
 
 ```bash
-python test_cache.py
+python test/test_cache.py
 ```
 
 This will:

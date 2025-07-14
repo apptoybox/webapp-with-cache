@@ -132,7 +132,7 @@ test:
 	fi
 	@echo "Waiting for application to be ready..."
 	@sleep 5
-	@python test_cache.py
+	@python test/test_cache.py
 
 # Test the 500 error fix
 test-fix:
@@ -143,7 +143,7 @@ test-fix:
 	fi
 	@echo "Waiting for application to be ready..."
 	@sleep 5
-	@python test_fix.py
+	@python test/test_fix.py
 
 # Test form validation
 test-validation:
@@ -154,7 +154,7 @@ test-validation:
 	fi
 	@echo "Waiting for application to be ready..."
 	@sleep 5
-	@python test_form_validation.py
+	@python test/test_form_validation.py
 
 # Seed database with sample data
 seed:
